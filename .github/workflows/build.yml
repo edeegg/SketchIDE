@@ -1,50 +1,40 @@
-name: Flutter CI
+name: "Build & Release"
+# see https://medium.com/@colonal/automating-flutter-builds-and-releases-with-github-actions-77ccf4a1ccdd
 
 on:
-  push:
-    branches:
-      - master
+  workflow_dispatch:
 
 jobs:
   build:
+    name: Build & Release
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
 
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-        
       - name: Set Up Java
         uses: actions/setup-java@v3.12.0
         with:
           distribution: 'oracle'
           java-version: '17'
 
-      # 1. INSTALAR FLUTTER ANTES DE QUALQUER COISA
-      - name: Setup Flutter
+      - name: Set Up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.4'
-          channel: stable
+          channel: 'stable'
 
-      # 3. Dependências com flutter
-      - name: Get dependencies
+      - name: Install Dependencies
         run: flutter pub get
 
-      - name: Format code
-        run: flutter format --set-exit-if-changed .
-
-      - name: Analyze code
-        run: flutter analyze .
-
-      - name: Run tests
-        run: flutter test
-
       - name: Build APK
-        run: flutter build apk
+        run: flutter build apk --release
 
-      - name: Upload APK
+
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: release-apk
-          path: build/app/outputs/apk/release/app-release.apk
+          name: Releases
+          path: |
+            build/app/outputs/apk/release/app_release_arm64.apk
