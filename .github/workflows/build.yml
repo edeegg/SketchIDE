@@ -4,6 +4,7 @@ name: "Build & Release"
 on:
   workflow_dispatch:
 
+
 jobs:
   build:
     name: Build & Release
@@ -30,7 +31,6 @@ jobs:
 
       - name: Build APK
         run: flutter build apk --release
-
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
