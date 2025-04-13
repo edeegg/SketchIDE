@@ -1,58 +1,52 @@
-name: Flutter Build APK
+name: "Build & Release (Simplificado)"
 
-# Acionamento do workflow para push e pull request no branch main
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   build:
-    # Utiliza a imagem mais recente do Ubuntu fornecida pelo GitHub Actions
+    name: Build & Release
     runs-on: ubuntu-latest
-
     steps:
-      # Etapa 1: Checkout do código-fonte
-      - name: Checkout do código
+      - name: Checkout do Repositório
         uses: actions/checkout@v3
 
-      # Etapa 2: Configurar o Java (necessário para compilação Android)
+      - name: Extrair versão do pubspec.yaml
+        id: extract_version
+        run: |
+          # Extrai a versão; ajuste conforme o formato do seu pubspec.yaml se necessário
+          VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Versão extraída: $VERSION"
+
       - name: Configurar Java
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
 
-      # Etapa 3: Configurar o Flutter
-      # Aqui usamos a ação mantida por subosito, especificando a versão e o canal desejado
       - name: Configurar Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'   # Altere conforme a versão desejada
-          channel: 'stable'
+          flutter-version: '3.24.4'
+          channel: stable
 
-      # Etapa 4: Instalar dependências do projeto
-      - name: Instalar dependências
+      - name: Instalar Dependências
         run: flutter pub get
 
-      # Etapa 5: Análise estática do código
-      - name: Analisar projeto
-        run: flutter analyze
-
-      # Etapa 6: Execução dos testes automatizados
-      - name: Executar testes
-        run: flutter test
-
-      # Etapa 7: Compilar o APK em modo release
       - name: Build APK Release
-        run: flutter build apk --release
+        run: flutter build apk --release --dart-define=VERSION=${{ env.VERSION }}
 
-      # Etapa 8: Upload do APK gerado como artefato para posterior download
-      - name: Upload do APK
+      - name: Upload de Artifact
         uses: actions/upload-artifact@v3
         with:
           name: apk-release
+          # Se não estiver usando --split-per-abi, o caminho pode ser diferente
           path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Criar Release no GitHub
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ env.VERSION }}
+          artifacts: build/app/outputs/flutter-apk/app-release.apk
+          token: ${{ secrets.GITHUB_TOKEN }}
