@@ -1,5 +1,6 @@
-name: Flutter CI
+name: Flutter Build APK
 
+# Acionamento do workflow para push e pull request no branch main
 on:
   push:
     branches:
@@ -10,38 +11,48 @@ on:
 
 jobs:
   build:
+    # Utiliza a imagem mais recente do Ubuntu fornecida pelo GitHub Actions
     runs-on: ubuntu-latest
 
     steps:
+      # Etapa 1: Checkout do código-fonte
       - name: Checkout do código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
+      # Etapa 2: Configurar o Java (necessário para compilação Android)
       - name: Configurar Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
 
+      # Etapa 3: Configurar o Flutter
+      # Aqui usamos a ação mantida por subosito, especificando a versão e o canal desejado
       - name: Configurar Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.24.0'   # Altere conforme a versão desejada
           channel: 'stable'
 
+      # Etapa 4: Instalar dependências do projeto
       - name: Instalar dependências
         run: flutter pub get
 
-      - name: Analisar código
+      # Etapa 5: Análise estática do código
+      - name: Analisar projeto
         run: flutter analyze
 
+      # Etapa 6: Execução dos testes automatizados
       - name: Executar testes
         run: flutter test
 
-      - name: Compilar APK
+      # Etapa 7: Compilar o APK em modo release
+      - name: Build APK Release
         run: flutter build apk --release
 
+      # Etapa 8: Upload do APK gerado como artefato para posterior download
       - name: Upload do APK
         uses: actions/upload-artifact@v3
         with:
-          name: release-apk
+          name: apk-release
           path: build/app/outputs/flutter-apk/app-release.apk
