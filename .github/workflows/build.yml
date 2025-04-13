@@ -12,17 +12,22 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/setup-java@v1
+      # 1. INSTALAR FLUTTER ANTES DE QUALQUER COISA
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Flutter version
+        run: flutter --version
+
+      # 2. Java pode vir depois
+      - name: Setup Java
+        uses: actions/setup-java@v1
         with:
           java-version: '12.x'
 
-      # Atualize para a versão 2 do subosito/flutter-action
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-
-      - run: flutter --version
-
+      # 3. Dependências com flutter
       - name: Get dependencies
         run: flutter pub get
 
